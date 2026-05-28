@@ -1,5 +1,9 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+# Interactive Fiction Agentic System
+
+# This system will work in two phases:
+
+# 1. Startup Phase
 
 
+
+# 2. Interaction Phase
