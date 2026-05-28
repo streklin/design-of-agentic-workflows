@@ -1,0 +1,585 @@
+{
+    "graph_data": null,
+    "graph_path": null,
+    "graph_type": null,
+    "schema_types": null,
+    "index_config": null,
+    "edges": {
+        "1185ee0f": {
+            "edge_id": "1185ee0f",
+            "edge_data": {
+                "predicate": "wears"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "177b2d72"
+        },
+        "125471c8": {
+            "edge_id": "125471c8",
+            "edge_data": {
+                "predicate": "communicates with"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "b35671b7"
+        },
+        "5b8d8328": {
+            "edge_id": "5b8d8328",
+            "edge_data": {
+                "predicate": "enables communication with"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "177b2d72",
+            "to_node_id": "b35671b7"
+        },
+        "ccb3019c": {
+            "edge_id": "ccb3019c",
+            "edge_data": {
+                "predicate": "checks in at"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "d7afae4e"
+        },
+        "8069e9c7": {
+            "edge_id": "8069e9c7",
+            "edge_data": {
+                "predicate": "is assigned to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "99fd2e78"
+        },
+        "927d2c19": {
+            "edge_id": "927d2c19",
+            "edge_data": {
+                "predicate": "is teleported to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "99fd2e78"
+        },
+        "62ec9dbf": {
+            "edge_id": "62ec9dbf",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "99fd2e78",
+            "to_node_id": "7808f5ef"
+        },
+        "001c5ee0": {
+            "edge_id": "001c5ee0",
+            "edge_data": {
+                "predicate": "holds"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "7808f5ef",
+            "to_node_id": "7e83464a"
+        },
+        "c40e74ec": {
+            "edge_id": "c40e74ec",
+            "edge_data": {
+                "predicate": "inserts locket into"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "7e83464a"
+        },
+        "9e6a2db9": {
+            "edge_id": "9e6a2db9",
+            "edge_data": {
+                "predicate": "acts as"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "177b2d72",
+            "to_node_id": "7e83464a"
+        },
+        "8372fb3b": {
+            "edge_id": "8372fb3b",
+            "edge_data": {
+                "predicate": "is located on"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "99fd2e78",
+            "to_node_id": "6c21d79a"
+        },
+        "0ef979e1": {
+            "edge_id": "0ef979e1",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "6c21d79a",
+            "to_node_id": "53e31fe2"
+        },
+        "170257dc": {
+            "edge_id": "170257dc",
+            "edge_data": {
+                "predicate": "leads to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "53e31fe2",
+            "to_node_id": "256b9e6f"
+        },
+        "e6bcbd9e": {
+            "edge_id": "e6bcbd9e",
+            "edge_data": {
+                "predicate": "evacuates through"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "53e31fe2"
+        },
+        "099dbeab": {
+            "edge_id": "099dbeab",
+            "edge_data": {
+                "predicate": "uses locket to access"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "b156194c"
+        },
+        "5a431f2b": {
+            "edge_id": "5a431f2b",
+            "edge_data": {
+                "predicate": "is located in"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "b156194c",
+            "to_node_id": "c81b38bc"
+        },
+        "cf993f78": {
+            "edge_id": "cf993f78",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "c81b38bc",
+            "to_node_id": "0e4e9655"
+        },
+        "1f1ba752": {
+            "edge_id": "1f1ba752",
+            "edge_data": {
+                "predicate": "houses"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "0e4e9655",
+            "to_node_id": "b1d56c5f"
+        },
+        "13dfa617": {
+            "edge_id": "13dfa617",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "b1d56c5f",
+            "to_node_id": "6d2af65e"
+        },
+        "e15a1ba5": {
+            "edge_id": "e15a1ba5",
+            "edge_data": {
+                "predicate": "is"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "6d2af65e",
+            "to_node_id": "b156194c"
+        },
+        "f7cd2906": {
+            "edge_id": "f7cd2906",
+            "edge_data": {
+                "predicate": "encounters"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "6d2af65e"
+        },
+        "3b285890": {
+            "edge_id": "3b285890",
+            "edge_data": {
+                "predicate": "processes residents into"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "6d2af65e",
+            "to_node_id": "bb207d87"
+        },
+        "36e56961": {
+            "edge_id": "36e56961",
+            "edge_data": {
+                "predicate": "works for"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "2f48f268"
+        },
+        "cb31b503": {
+            "edge_id": "cb31b503",
+            "edge_data": {
+                "predicate": "is controlled by"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "2f48f268",
+            "to_node_id": "6d2af65e"
+        },
+        "f3f23bca": {
+            "edge_id": "f3f23bca",
+            "edge_data": {
+                "predicate": "is operated by"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "2f48f268",
+            "to_node_id": "6d2af65e"
+        },
+        "dac7e4f7": {
+            "edge_id": "dac7e4f7",
+            "edge_data": {
+                "predicate": "coordinates"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "b35671b7",
+            "to_node_id": "a967f92a"
+        },
+        "8f586cc6": {
+            "edge_id": "8f586cc6",
+            "edge_data": {
+                "predicate": "instructs to break"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "b35671b7",
+            "to_node_id": "91455cfa"
+        },
+        "e23f45a7": {
+            "edge_id": "e23f45a7",
+            "edge_data": {
+                "predicate": "must choose between saving"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "6d2af65e"
+        },
+        "1eaefc50": {
+            "edge_id": "1eaefc50",
+            "edge_data": {
+                "predicate": "must choose between stopping"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "2f48f268"
+        },
+        "b27e8b55": {
+            "edge_id": "b27e8b55",
+            "edge_data": {
+                "predicate": "works to destroy"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "a967f92a",
+            "to_node_id": "b156194c"
+        },
+        "ed62e79c": {
+            "edge_id": "ed62e79c",
+            "edge_data": {
+                "predicate": "is owned by"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "2f48f268",
+            "to_node_id": "ad1ec2fd"
+        },
+        "f4a12f4f": {
+            "edge_id": "f4a12f4f",
+            "edge_data": {
+                "predicate": "alerts"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "8bfdb642",
+            "to_node_id": "a967f92a"
+        },
+        "0d767d18": {
+            "edge_id": "0d767d18",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "e9187521",
+            "to_node_id": "7e83464a"
+        }
+    },
+    "graph_id": "640f3ee6",
+    "nodes": {
+        "a967f92a": {
+            "node_data": {
+                "name": "Zania Sagan",
+                "type": "Character",
+                "description": "The protagonist and main character who works as a cleaner in a hospice facility"
+            },
+            "node_id": "a967f92a",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "177b2d72": {
+            "node_data": {
+                "name": "Zania's Locket",
+                "type": "Object",
+                "description": "A small, heart-shaped golden locket worn around Zania's neck"
+            },
+            "node_id": "177b2d72",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "b35671b7": {
+            "node_data": {
+                "name": "Samuel",
+                "type": "Character",
+                "description": "A gruff-voiced accomplice who communicates with Zania through her locket"
+            },
+            "node_id": "b35671b7",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "d7afae4e": {
+            "node_data": {
+                "name": "Teleportation Stations",
+                "type": "Location",
+                "description": "The facility where Zania signs in for her work shift"
+            },
+            "node_id": "d7afae4e",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "99fd2e78": {
+            "node_data": {
+                "name": "Room 1142",
+                "type": "Location",
+                "description": "A small dorm room with dark wooden paneling on floor 74 of the hospice"
+            },
+            "node_id": "99fd2e78",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "7808f5ef": {
+            "node_data": {
+                "name": "Mechanical Bed",
+                "type": "Object",
+                "description": "A large green automated bed in room 1142 where the mummified corpse is kept"
+            },
+            "node_id": "7808f5ef",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "7e83464a": {
+            "node_data": {
+                "name": "Cybernetic Implants",
+                "type": "Object",
+                "description": "Life-extension devices found within the corpse"
+            },
+            "node_id": "7e83464a",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "6c21d79a": {
+            "node_data": {
+                "name": "Floor 74",
+                "type": "Location",
+                "description": "The floor level where room 1142 is located within the hospice"
+            },
+            "node_id": "6c21d79a",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "53e31fe2": {
+            "node_data": {
+                "name": "Hallway",
+                "type": "Location",
+                "description": "The corridor on floor 74 near room 1142 where workers evacuate"
+            },
+            "node_id": "53e31fe2",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "256b9e6f": {
+            "node_data": {
+                "name": "Teleportation Chamber",
+                "type": "Location",
+                "description": "A platform at the end of the hallway on floor 74 that allows workers to teleport"
+            },
+            "node_id": "256b9e6f",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "b156194c": {
+            "node_data": {
+                "name": "Central Computer Core",
+                "type": "Location",
+                "description": "A restricted area within the hospice that appears to be a deserted auditorium"
+            },
+            "node_id": "b156194c",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "c81b38bc": {
+            "node_data": {
+                "name": "Auditorium",
+                "type": "Location",
+                "description": "A deserted auditorium at the center of the hospice facility"
+            },
+            "node_id": "c81b38bc",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "0e4e9655": {
+            "node_data": {
+                "name": "Cylindrical Pedestal",
+                "type": "Object",
+                "description": "The central computer core housed in the auditorium"
+            },
+            "node_id": "0e4e9655",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "b1d56c5f": {
+            "node_data": {
+                "name": "Vial of Blueish Liquid",
+                "type": "Object",
+                "description": "A transparent container holding the child-sized brain of Sasha"
+            },
+            "node_id": "b1d56c5f",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "6d2af65e": {
+            "node_data": {
+                "name": "Sasha",
+                "type": "Character",
+                "description": "The central computer core of the hospice facility, presented as a child-like entity"
+            },
+            "node_id": "6d2af65e",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "bb207d87": {
+            "node_data": {
+                "name": "Processing Center",
+                "type": "Location",
+                "description": "A restricted area within the hospice facility that Zania and Samuel attempt to access"
+            },
+            "node_id": "bb207d87",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "2f48f268": {
+            "node_data": {
+                "name": "Hospice",
+                "type": "Location",
+                "description": "The main facility where the story takes place"
+            },
+            "node_id": "2f48f268",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "91455cfa": {
+            "node_data": {
+                "name": "Glass Casing",
+                "type": "Object",
+                "description": "The protective glass container that houses and protects Sasha's brain"
+            },
+            "node_id": "91455cfa",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "ad1ec2fd": {
+            "node_data": {
+                "name": "Galaxy",
+                "type": "Location",
+                "description": "The broader setting mentioned at the end of the story"
+            },
+            "node_id": "ad1ec2fd",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "8bfdb642": {
+            "node_data": {
+                "name": "Zania's Watch",
+                "type": "Object",
+                "description": "A device that displays shift timers and warnings"
+            },
+            "node_id": "8bfdb642",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "e9187521": {
+            "node_data": {
+                "name": "Yellow Bucket",
+                "type": "Object",
+                "description": "A cleaning supply container filled with various tools"
+            },
+            "node_id": "e9187521",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        }
+    }
+}
