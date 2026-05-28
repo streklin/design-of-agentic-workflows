@@ -18,6 +18,8 @@ from mgraph_db.mgraph.MGraph import MGraph
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node import Schema__MGraph__Node
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node__Data import Schema__MGraph__Node__Data
 from mgraph_db.mgraph.schemas.Schema__MGraph__Edge import Schema__MGraph__Edge, Schema__MGraph__Edge__Data
+from mgraph_db.mgraph.schemas.Schema__MGraph__Graph import Schema__MGraph__Graph
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -86,7 +88,7 @@ entity_extraction_agent = Agent(
     system_prompt=("""You are an expert at extracting entities from a plot. You will be given a plot and a competency question. 
                    Your task is to extract the relevant entities from the plot that answer the competency question. 
                    Please provide your answer in a structured format, listing each entity with its name, type, and a brief description.""")
-) # type: ignore
+) 
 
 triplet_extraction_agent = Agent(
     model,
@@ -94,7 +96,33 @@ triplet_extraction_agent = Agent(
     system_prompt=("""You are an expert at extracting relationships between entities in a plot. You will be given a plot and a list of entities extracted from the plot. 
                    Your task is to identify the relationships between these entities based on the information provided in the plot. 
                    Please provide your answer in a structured format, listing each relationship as a triplet with the subject, predicate, and object.""")
-) # type: ignore
+)
+
+story_teller_agent = Agent(
+    model,
+    output_type=str,
+    system_prompt=("""
+        You are an expert story teller and summarizer.
+        You will be given tools to query a knowledge graph that contains information about a plot, including entities and relationships between them.
+        You will perform the following tasks based on the users input:
+        1. Summarize the story so far based on the information in the knowledge graph.
+        2. Answer any questions the user has about the plot based on the information in the knowledge graph.
+        3. Provide suggestions for next steps in the story based on the information in the knowledge graph and the user's input.
+        4. Update the story based on the user's input and any new information that may be added to the knowledge graph as a result of the user's input.
+    """)
+)
+
+########################################################################
+# MGraph Query and Update Tools
+########################################################################
+
+# query entity and relationships
+
+# add a new triplet to the graph
+
+# update an existing triplet in the graph
+
+# remove a triplet from the graph
 
 
 ########################################################################
@@ -298,14 +326,21 @@ def load_knowledge_graph(graph_file: str):
         graph_file: The path to the knowledge graph file to load.
     """
     print(f"Loading knowledge graph from {graph_file}...")
-    data = None
     with open(graph_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    mgraph.from_json(data)
+    graph_schema = Schema__MGraph__Graph.from_json(data)
+    mgraph.graph.model.data = graph_schema
+    mgraph.edit().rebuild_index()
 
 
-
+def get_story_so_far():
+    """
+    Retrieves the "story so far" based on the current state of the knowledge graph. This can be used to provide context to the user during interactions, 
+    allowing them to see a summary of the plot and the relationships between entities as they explore the story.
+    """
+    pass
+    
 
 ########################################################################
 # Main Entrypoint
