@@ -116,13 +116,29 @@ story_teller_agent = Agent(
 # MGraph Query and Update Tools
 ########################################################################
 
-# query entity and relationships
+def query_kg_by_type(entity_type: str):
+    """
+    Queries the knowledge graph for entities of a specific type and their relationships.
 
-# add a new triplet to the graph
+    Args:
+        entity_type: The type of entities to query for (e.g., "Character", "Location", etc.)
+    Returns:
+        A summary of the entities of the specified type and their relationships in the knowledge graph.
+    """
+    pass
 
-# update an existing triplet in the graph
+def query_kg_by_entity(entity_name: str):
+    """
+    Queries the knowledge graph for a specific entity and its relationships.
 
-# remove a triplet from the graph
+    Args:
+        entity_name: The name of the entity to query for.
+    Returns:
+        A summary of the specified entity and its relationships in the knowledge graph.
+    """
+    pass
+
+# allowed story transformations
 
 
 ########################################################################
