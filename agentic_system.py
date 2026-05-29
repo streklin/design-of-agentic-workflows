@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field
 from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.models.anthropic import AnthropicModel
 
+from enum import Enum
+
 from mgraph_db.mgraph.MGraph import MGraph
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node import Schema__MGraph__Node
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node__Data import Schema__MGraph__Node__Data
@@ -55,6 +57,16 @@ class Custom_Edge(Schema__MGraph__Edge):
 # Pydantic Objects
 ########################################################################
 
+class RelationshipEnum(str, Enum):
+    at_location = "at_location"
+    is_in_love_with = "is_in_love_with"
+    is_friends_with = "is_friends_with"
+    is_enemies_with = "is_enmies_with"
+    is_holding = "is_holding"
+    is_owner_of = "is_owner_of"
+    is_member_of = "is_member_of"
+
+
 class PlotEntity(BaseModel):
     name: str = Field(description="Name of the entity extracted from the plot")
     type: str = Field(description="The type of entity")
@@ -70,7 +82,7 @@ class EntityCollection(BaseModel):
 
 class GraphTriplet(BaseModel):
     subject: PlotEntity = Field(description="The subject of the relationship")
-    predicate: str = Field(description="The predicate describing the relationship")
+    predicate: RelationshipEnum = Field(description="The predicate describing the relationship")
     object: PlotEntity = Field(description="The object of the relationship")
 
 
@@ -138,7 +150,28 @@ def query_kg_by_entity(entity_name: str):
     """
     pass
 
-# allowed story transformations
+def add_kg_relationship(entity_name_subject: str, predicate: RelationshipEnum, entity_name_object: str):
+    """
+    Inserts a new relationship triplet into the KG
+
+    Args:
+        entity_name_subject: the entity we are adding a relationship to.
+        predicate: the relationship we are adding.
+        entity_name_object: the target of the relationship
+    """
+    pass
+
+def remove_kg_relationship(entity_name_subject: str, predicate: RelationshipEnum, entity_name_object: str):
+    """
+    Removes a relationship from the KG
+
+    Args:
+        entity_name_subject: the entity we are adding a relationship to.
+        predicate: the relationship we are adding.
+        entity_name_object: the target of the relationship    
+    """
+    pass
+
 
 
 ########################################################################
