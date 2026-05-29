@@ -52,21 +52,21 @@ class Custom_Node_Data(Schema__MGraph__Node__Data):
     description: str
     
 class Custom_Node(Schema__MGraph__Node):
-    node_data: Custom_Node_Data
-
+    node_data: Custom_Node_Data  # type: ignore
+ 
 
 # Custom Edge for MGraph
 class Custom_Edge_Data(Schema__MGraph__Edge__Data):
     predicate: str = ""  # This allows the 'predicate' key inside edge_data
 
 class Custom_Edge(Schema__MGraph__Edge):
-    edge_data: Custom_Edge_Data
+    edge_data: Custom_Edge_Data  # type: ignore
 
 
 # Custom Graph Schema to preserve Custom_Node and Custom_Edge types when loading
 class Custom_Graph(Schema__MGraph__Graph):
-    nodes: Dict[Node_Id, Custom_Node]
-    edges: Dict[Edge_Id, Custom_Edge]
+    nodes: Dict[Node_Id, Custom_Node]  # type: ignore
+    edges: Dict[Edge_Id, Custom_Edge]  # type: ignore
     
 
 ########################################################################
@@ -142,6 +142,20 @@ story_updater_agent = Agent(
     """)
 )
 
+character_agent = Agent(
+    model,
+    output_type=str,
+    system_prompt=("""
+        You are an expert at understanding and summarizing a story from a specific character's perspective.
+        You will be given the relevant triplets from a knowledge graph that contains information from the Characters persepctive.
+        You will be given the history of the users actions actions and corresponding story updates triggered by those actions.
+        You will be given tools to query the knowledge graph, add relationships, and remove relationships.
+        Your task is
+            * Generate the most likely action this character would take based on the information available.
+            * Update the knowledge graph based on the character's actions as needed.
+    """)
+)
+
 guardian_agent = Agent(
     model,
     output_type=str,
@@ -197,6 +211,7 @@ def query_kg_by_entity_name(entity_name: str) -> str:
 
 
 @story_updater_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
+@character_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
 def insert_triplet_into_kg(subject: str, predicate: str, object: str):
     """
     Inserts a new triplet into the knowledge graph, creating nodes for the subject and object if they do not already exist, and an edge for the predicate that connects them.
@@ -246,6 +261,7 @@ def insert_triplet_into_kg(subject: str, predicate: str, object: str):
         )
 
 @story_updater_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
+@character_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
 def remove_relationship(subject: str, predicate: str, object: str):
     """
     Removes a triplet from the knowledge graph based on the subject, predicate, and object.
@@ -257,10 +273,10 @@ def remove_relationship(subject: str, predicate: str, object: str):
         object: The object of the relationship to remove from the knowledge graph.
     """
     with mgraph.edit() as edit:
-        for edge in edit.edges():
-            edge_subject = edit.node(edge.from_node_id()).node_data.name
+        for edge in edit.edges():  # type: ignore
+            edge_subject = edit.node(edge.from_node_id()).node_data.name  # type: ignore
             edge_predicate = getattr(edge.edge_data, 'predicate', None)
-            edge_object = edit.node(edge.to_node_id()).node_data.name
+            edge_object = edit.node(edge.to_node_id()).node_data.name  # type: ignore
 
             if edge_subject == subject and edge_predicate == predicate and edge_object == object:
                 edit.delete_edge(edge.edge_id)
@@ -331,13 +347,13 @@ def load_entities_from_plot(plot: str) -> EntityCollection:
     genre_entities_results = extract_entities(plot, genre_extraction_cq, "Genre")
 
     return EntityCollection(
-        characters=character_entities_results.output,
-        locations=location_entities_results.output,
-        objects=object_entities_results.output,
-        plot_events=plot_event_entities_results.output,
-        themes=theme_entities_results.output,
-        genre=genre_entities_results.output
-    )  # type: ignore
+        characters=character_entities_results.output, # type: ignore
+        locations=location_entities_results.output,  # type: ignore
+        objects=object_entities_results.output,  # type: ignore
+        plot_events=plot_event_entities_results.output,  # type: ignore
+        themes=theme_entities_results.output,  # type: ignore
+        genre=genre_entities_results.output  # type: ignore
+    ) 
 
 
 def extract_relationships(plot: str, entities: list[PlotEntity]) -> list[GraphTriplet]:
@@ -458,7 +474,7 @@ def graph_construction_pipeline(plot_file: str):
 
     entity_collection = load_entities_from_plot(plot)
     relationships = extract_relationships(plot, entity_collection.characters + entity_collection.locations + entity_collection.objects + entity_collection.plot_events + entity_collection.themes + entity_collection.genre)
-    construct_knowledge_graph(relationships.output)
+    construct_knowledge_graph(relationships.output)  # type: ignore
     return True
 
 
@@ -478,9 +494,20 @@ def load_knowledge_graph(graph_file: str):
         data = json.load(f)
 
     graph_schema = Custom_Graph.from_json(data)
-    mgraph.graph.model.data = graph_schema
+    mgraph.graph.model.data = graph_schema  # type: ignore
     mgraph.edit().rebuild_index()
 
+
+def get_all_characters() -> list[str]:
+    """
+    Retrieves a list of all character names from the knowledge graph. This can be used to provide options to the user for selecting a character's perspective to experience the story from.
+    """
+    characters = []
+    with mgraph.data() as data:
+        for node in data.nodes():
+            if hasattr(node, 'node_data') and getattr(node.node_data, 'type', None) == "Character":
+                characters.append(getattr(node.node_data, 'name', None))
+    return characters
 
 def get_story_so_far(character: str) -> str:
     """
@@ -545,6 +572,39 @@ def update_story_and_kg(user_input: str, story_update: str, memory: list) -> str
 
     return story_updater_agent.run_sync(prompt).output # type: ignore
 
+
+def character_agent_interaction(character: str, user_input: str, memory: list) -> str:
+    """
+    Interacts with the character agent to determine the character's next actions in the story based on the user's input and the current state of the knowledge graph, and updates the knowledge graph based on the character's actions.
+
+    Args:
+        character: The name of the character whose perspective the story is being told from.
+        user_input: The user's input that may influence the character's actions.
+        memory: A list of previous user inputs and corresponding story updates that provide context for the character's decision-making.
+    Returns:
+        A summary of the character's next actions in the story based on the user's input and the current state of the knowledge graph.
+    """
+
+    character_triplets = query_kg_by_entity_name(character)
+
+    prompt = f"""
+        Update the actions and provide the perpective for the character based on the following user input and memory of the story so far, which includes previous user inputs and corresponding story updates. The character's actions should be based on the information in the knowledge graph, which includes relevant triplets about the character and their relationships to other entities in the graph.
+            
+        Character: 
+        {character}
+
+        Relevant Triplets from the Knowledge Graph:
+        {character_triplets}
+
+        User Input:
+        {user_input}
+
+        Memory of previous user inputs and corresponding story updates:
+        {memory}
+    """
+
+    return character_agent.run_sync(prompt).output # type: ignore
+
 ########################################################################
 # Main Entrypoint
 ########################################################################
@@ -561,7 +621,28 @@ def main():
         load_knowledge_graph(command_line_args.graph_file)    
 
     # Phase 2: Interact with the user using the KG.
-    character_name = "Zania Sagan"
+    character_name = None
+
+    characters = get_all_characters()
+    
+    print("Available characters to experience the story from:")
+    for i, character in enumerate(characters):
+        print(f"{i + 1}. {character}")
+    
+    while character_name is None:
+        character_choice = input("Please select a character by entering the corresponding number: ")
+        try:
+            character_index = int(character_choice) - 1
+            if 0 <= character_index < len(characters):
+                character_name = characters[character_index]
+            else:
+                print("Invalid choice. Please enter a number corresponding to one of the characters listed.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+    
+    characters.remove(character_name) # remove the selected character from the list of characters, so that we can use that list for updating the story from the other characters perspectives during interactions
+    
+
     print(f"Getting the story so far from the perspective of {character_name}...")
     story_so_far = get_story_so_far(character_name)
     print(f"Story so far from {character_name}'s perspective:\n{story_so_far}")
@@ -600,7 +681,10 @@ def main():
             print("Sorry, I cannot process that input. Please try something else.")
             continue
 
+        print("Generating story update based on user input and memory of the story so far...")
         story_update = generate_story_update(user_input, list(session_memory))
+
+        print("Updating the story and knowledge graph based on the generated story update...")
         kg_changes = update_story_and_kg(user_input, story_update, list(session_memory))
 
         memory_entry = {
@@ -610,7 +694,16 @@ def main():
         }
         session_memory.append(memory_entry)
 
-        print(f"*****RESPONSE******\n{story_update}")
+
+        ########### CHARACTER AND WORLD UPDATES ############
+        for character in characters:
+            print(f"Updating story from {character}'s perspective...")
+            update = character_agent_interaction(character, user_input, list(session_memory))
+            print(f"Story update from {character}'s perspective:\n{update}")
+
+
+        ######## PRINT STORY UPDATE FOR USER #########
+        print(f"*************************************************************\n{story_update}")
 
 
 if __name__ == "__main__":
