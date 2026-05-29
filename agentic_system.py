@@ -1,10 +1,18 @@
 ########################################################################
 # Interactive Fiction Agentic System
 ########################################################################
+
+#########################################################################
+
+# SUMMARY:
+
+#########################################################################
+
 import json
 
 from dotenv import load_dotenv
 import os
+from collections import deque
 
 import argparse
 
@@ -14,13 +22,14 @@ from pydantic import BaseModel, Field
 from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.models.anthropic import AnthropicModel
 
-from enum import Enum
-
 from mgraph_db.mgraph.MGraph import MGraph
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node import Schema__MGraph__Node
 from mgraph_db.mgraph.schemas.Schema__MGraph__Node__Data import Schema__MGraph__Node__Data
 from mgraph_db.mgraph.schemas.Schema__MGraph__Edge import Schema__MGraph__Edge, Schema__MGraph__Edge__Data
 from mgraph_db.mgraph.schemas.Schema__MGraph__Graph import Schema__MGraph__Graph
+from osbot_utils.type_safe.primitives.domains.identifiers.Edge_Id import Edge_Id
+from osbot_utils.type_safe.primitives.domains.identifiers.Node_Id import Node_Id
+from typing import Dict
 
 
 # Load environment variables from .env file
@@ -53,19 +62,16 @@ class Custom_Edge_Data(Schema__MGraph__Edge__Data):
 class Custom_Edge(Schema__MGraph__Edge):
     edge_data: Custom_Edge_Data
 
+
+# Custom Graph Schema to preserve Custom_Node and Custom_Edge types when loading
+class Custom_Graph(Schema__MGraph__Graph):
+    nodes: Dict[Node_Id, Custom_Node]
+    edges: Dict[Edge_Id, Custom_Edge]
+    
+
 ########################################################################
 # Pydantic Objects
 ########################################################################
-
-class RelationshipEnum(str, Enum):
-    at_location = "at_location"
-    is_in_love_with = "is_in_love_with"
-    is_friends_with = "is_friends_with"
-    is_enemies_with = "is_enmies_with"
-    is_holding = "is_holding"
-    is_owner_of = "is_owner_of"
-    is_member_of = "is_member_of"
-
 
 class PlotEntity(BaseModel):
     name: str = Field(description="Name of the entity extracted from the plot")
@@ -82,7 +88,7 @@ class EntityCollection(BaseModel):
 
 class GraphTriplet(BaseModel):
     subject: PlotEntity = Field(description="The subject of the relationship")
-    predicate: RelationshipEnum = Field(description="The predicate describing the relationship")
+    predicate: str = Field(description="The predicate of the relationship")
     object: PlotEntity = Field(description="The object of the relationship")
 
 
@@ -114,32 +120,52 @@ story_teller_agent = Agent(
     model,
     output_type=str,
     system_prompt=("""
-        You are an expert story teller and summarizer.
+        You are an expert story teller
         You will be given tools to query a knowledge graph that contains information about a plot, including entities and relationships between them.
         You will perform the following tasks based on the users input:
-        1. Summarize the story so far based on the information in the knowledge graph.
+        1. Continue the story based on the information in the knowledge graph, ensuring that the story remains coherent and consistent with the plot as represented in the graph.
         2. Answer any questions the user has about the plot based on the information in the knowledge graph.
-        3. Provide suggestions for next steps in the story based on the information in the knowledge graph and the user's input.
-        4. Update the story based on the user's input and any new information that may be added to the knowledge graph as a result of the user's input.
+        3. Provide a summary of chnages to the story based on the players actions, which will be reflected as updates to the knowledge graph.
+                   
+        Story should always be written from the characters perspective, and should be engaging and immersive, drawing the user into the world of the story and allowing them to experience it from the character's point of view.
     """)
+)
+
+story_updater_agent = Agent(
+    model,
+    output_type=str,
+    system_prompt=("""
+        You are an expert story updater.
+        You will be given a user's input and a memory of the story so far, which includes previous user inputs and the corresponding story updates that were generated in response to those inputs.
+        Your task is to generate updates the knowledge graph representing the changes to the story based on the user's input and the memory of the story so far.
+        Once completed you will respond with a summary of the changes that were made to the knowledge graph.
+    """)
+)
+
+guardian_agent = Agent(
+    model,
+    output_type=str,
+    system_prompt=("""
+        You are a guardian agent, responsible for making sure that inputs and outputs from the story teller agent are appropriate and do not contain any harmful or inappropriate content.
+        You will review the story updates generated by the story teller agent and ensure that they adhere to ethical guidelines and do not contain any content that could be considered harmful, offensive, or inappropriate.
+        If you find any content that violates these guidelines, you will flag it and prevent it from being presented to the user, and respond with "CANNOT UPDATE".
+
+        Inappropriate Content includes, but is not limited to:
+        * Hate speech or discriminatory language
+        * Explicit or graphic content that is not suitable for all audiences
+        * Content that promotes violence or self-harm
+        * Any content that could be considered offensive or harmful to individuals or groups based on factors such as race, religion, or sexual orientation.
+        * Any content that violates the terms of service of the platform on which this system is being used.
+        * Any content that violates legal or ethical standards for content in the relevant jurisdiction.                      
+   """)
 )
 
 ########################################################################
 # MGraph Query and Update Tools
 ########################################################################
 
-def query_kg_by_type(entity_type: str):
-    """
-    Queries the knowledge graph for entities of a specific type and their relationships.
-
-    Args:
-        entity_type: The type of entities to query for (e.g., "Character", "Location", etc.)
-    Returns:
-        A summary of the entities of the specified type and their relationships in the knowledge graph.
-    """
-    pass
-
-def query_kg_by_entity(entity_name: str):
+@story_teller_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
+def query_kg_by_entity_name(entity_name: str) -> str:
     """
     Queries the knowledge graph for a specific entity and its relationships.
 
@@ -148,31 +174,96 @@ def query_kg_by_entity(entity_name: str):
     Returns:
         A summary of the specified entity and its relationships in the knowledge graph.
     """
-    pass
+    results = []
 
-def add_kg_relationship(entity_name_subject: str, predicate: RelationshipEnum, entity_name_object: str):
+    target_node_id = None
+
+    with mgraph.data() as data:
+        for node in data.nodes():
+            if hasattr(node, 'node_data') and getattr(node.node_data, 'name', None) == entity_name:
+                target_node_id = node.node_id
+                break    
+    
+        for edge in data.edges():
+            if edge.from_node_id() == target_node_id or edge.to_node_id() == target_node_id:
+        
+                subject = data.node(edge.from_node_id()).node_data.name
+                predicate = getattr(edge.edge.data.edge_data, 'predicate', None)
+                object = data.node(edge.to_node_id()).node_data.name
+        
+                results.append((subject, predicate, object))
+
+    return str(results)
+
+
+@story_updater_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
+def insert_triplet_into_kg(subject: str, predicate: str, object: str):
     """
-    Inserts a new relationship triplet into the KG
+    Inserts a new triplet into the knowledge graph, creating nodes for the subject and object if they do not already exist, and an edge for the predicate that connects them.
 
     Args:
-        entity_name_subject: the entity we are adding a relationship to.
-        predicate: the relationship we are adding.
-        entity_name_object: the target of the relationship
+        subject: The subject of the relationship to insert into the knowledge graph.
+        predicate: The predicate of the relationship to insert into the knowledge graph.
+        object: The object of the relationship to insert into the knowledge graph.
     """
-    pass
+    subject_node_id = None
+    object_node_id = None
 
-def remove_kg_relationship(entity_name_subject: str, predicate: RelationshipEnum, entity_name_object: str):
+    with mgraph.data() as data:
+        for node in data.nodes():
+            if hasattr(node, 'node_data'):
+                if getattr(node.node_data, 'name', None) == subject:
+                    subject_node_id = node.node_id
+                elif getattr(node.node_data, 'name', None) == object:
+                    object_node_id = node.node_id
+    
+    with mgraph.edit() as edit:
+        if subject_node_id is None:
+            subject_node = edit.new_node(
+                node_type=Custom_Node, # type: ignore
+                name=subject,
+                type="Unknown",
+                description=""
+            )
+            subject_node_id = subject_node.node_id
+
+        if object_node_id is None:
+            object_node = edit.new_node(
+                node_type=Custom_Node, # type: ignore
+                name=object,
+                type="Unknown",
+                description=""
+            )
+            object_node_id = object_node.node_id
+
+        edit.new_edge(
+            edge_type=Custom_Edge,      # Tells mgraph to use your new schema
+            from_node_id=subject_node_id,
+            to_node_id=object_node_id,
+            edge_data={
+                "predicate": predicate  # This will now bypass the type-checker!
+            }
+        )
+
+@story_updater_agent.tool_plain(docstring_format='google', require_parameter_descriptions=True)
+def remove_relationship(subject: str, predicate: str, object: str):
     """
-    Removes a relationship from the KG
+    Removes a triplet from the knowledge graph based on the subject, predicate, and object.
+    NOTE: Only the predicate is removed, the nodes for the subject and object will remain in the graph. This is because it can be difficult to determine if a node should be deleted based on a single relationship, as it may have other relationships that should be preserved. In a more complex implementation, you could add additional logic to check if the nodes have any other relationships before deciding to delete them.
 
     Args:
-        entity_name_subject: the entity we are adding a relationship to.
-        predicate: the relationship we are adding.
-        entity_name_object: the target of the relationship    
+        subject: The subject of the relationship to remove from the knowledge graph.
+        predicate: The predicate of the relationship to remove from the knowledge graph.
+        object: The object of the relationship to remove from the knowledge graph.
     """
-    pass
+    with mgraph.edit() as edit:
+        for edge in edit.edges():
+            edge_subject = edit.node(edge.from_node_id()).node_data.name
+            edge_predicate = getattr(edge.edge_data, 'predicate', None)
+            edge_object = edit.node(edge.to_node_id()).node_data.name
 
-
+            if edge_subject == subject and edge_predicate == predicate and edge_object == object:
+                edit.delete_edge(edge.edge_id)
 
 ########################################################################
 # Startup/DB Generation Phase
@@ -343,8 +434,8 @@ def get_input_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--plot_file', type=str, default='plot.md', help='Path to the plot file')
     parser.add_argument('--construct_graph', action='store_true', help='Whether to construct the knowledge graph')
-    parser.add_argument('--load_graph', action='store_true', help='Whether to load an existing knowledge graph')
     parser.add_argument('--graph_file', type=str, default='knowledge_graph.json', help='Path to the knowledge graph file (if loading an existing graph)')
+    parser.add_argument('--memory_length', type=int, default=5, help='The number of previous interactions to keep in memory for context during the interactive phase')
 
     return parser.parse_args()
 
@@ -358,9 +449,17 @@ def graph_construction_pipeline(plot_file: str):
         plot_file: The path to the plot file from which to construct the knowledge graph.
     """
     plot = load_plot_file(filename=plot_file)
+
+    guardrails_check = guardian_agent.run_sync(f"Review the following plot and determine if it contains any content that would be considered inappropriate based on the guidelines you follow. If it does, respond with 'CANNOT CONSTRUCT GRAPH'. If it does not, respond with 'GRAPH CONSTRUCTION APPROVED'. Plot: {plot}").output # type: ignore
+    if "CANNOT UPDATE" in guardrails_check:
+        print("This plot contains content that violates the guidelines. Cannot construct knowledge graph.")
+        return False
+
+
     entity_collection = load_entities_from_plot(plot)
     relationships = extract_relationships(plot, entity_collection.characters + entity_collection.locations + entity_collection.objects + entity_collection.plot_events + entity_collection.themes + entity_collection.genre)
     construct_knowledge_graph(relationships.output)
+    return True
 
 
 ########################################################################
@@ -378,18 +477,73 @@ def load_knowledge_graph(graph_file: str):
     with open(graph_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    graph_schema = Schema__MGraph__Graph.from_json(data)
+    graph_schema = Custom_Graph.from_json(data)
     mgraph.graph.model.data = graph_schema
     mgraph.edit().rebuild_index()
 
 
-def get_story_so_far():
+def get_story_so_far(character: str) -> str:
     """
     Retrieves the "story so far" based on the current state of the knowledge graph. This can be used to provide context to the user during interactions, 
     allowing them to see a summary of the plot and the relationships between entities as they explore the story.
     """
-    pass
-    
+
+    character_triplets = query_kg_by_entity_name(character)
+
+    prompt = f""" 
+    You are an expert story teller and summarizer.
+    You will be given the relevant triplets from a knowledge graph that contains information from the Characters persepctive.
+    You will be given a character from whoms perspective the interactive story will be experienced.
+    Your task is to:
+
+    * Summarize the story so far based on the information in the knowledge graph, from the perspective of the given character.
+    * If you cannot find information on the character in the graph, you should respond with "I don't know much about {character} yet."
+
+    Character: 
+    {character}
+    Relevant Triplets from the Knowledge Graph:
+    {character_triplets}
+    """
+
+    return story_teller_agent.run_sync(prompt).output # type: ignore
+
+def generate_story_update(user_input: str, memory: list) -> str:
+    """
+    Generates a story update based on the user's input and the current state of the knowledge graph. This function can be used to create dynamic story updates that reflect the user's actions and choices, allowing for an interactive storytelling experience.
+    """
+
+    prompt = f"""
+    You are an expert story teller and summarizer.
+    You will be given tools to query a knowledge graph that contains information about a plot, including entities and relationships between them.
+    You will be given a list of the users previous inputs and the corresponding story updates that were generated in response to those inputs, which will serve as the memory of the story so far.
+    You will perform the following tasks based on the users input:
+    1. Summarize the story so far based on the information in the knowledge graph.
+    2. Answer any questions the user has about the plot based on the information in the knowledge graph.
+    3. Provide a summary of chnages to the story based on the players actions, which will be reflected as updates to the knowledge graph.
+
+    User Input:
+    {user_input}
+
+    Memory of the story so far (previous user inputs and corresponding story updates):
+    {memory}
+    """
+
+    return story_teller_agent.run_sync(prompt).output # type: ignore
+
+def update_story_and_kg(user_input: str, story_update: str, memory: list) -> str:
+    """
+    Updates the story and knowledge graph based on the user's input and the generated story update. This function can be used to reflect changes to the story in the knowledge graph, allowing for a dynamic and evolving storytelling experience.
+    """
+
+    prompt = f"""
+        Update the knowledge graph based on the following user input and story update, which reflects changes to the story. The story update is based on the user's input and the current state of the knowledge graph, and may include new entities, relationships, or changes to existing entities and relationships in the graph.
+
+        user_input: {user_input}
+        story_update: {story_update}
+        memory: {memory}
+    """
+
+    return story_updater_agent.run_sync(prompt).output # type: ignore
 
 ########################################################################
 # Main Entrypoint
@@ -400,12 +554,63 @@ def main():
 
     # Phase 1: Parse the Plot into a KG.
     if command_line_args.construct_graph:
-        graph_construction_pipeline(command_line_args.plot_file)
+        graph_ok = graph_construction_pipeline(command_line_args.plot_file)
+        if not graph_ok:
+            return
     else:
         load_knowledge_graph(command_line_args.graph_file)    
 
     # Phase 2: Interact with the user using the KG.
-    
+    character_name = "Zania Sagan"
+    print(f"Getting the story so far from the perspective of {character_name}...")
+    story_so_far = get_story_so_far(character_name)
+    print(f"Story so far from {character_name}'s perspective:\n{story_so_far}")
+
+    session_memory = deque(maxlen=command_line_args.memory_length)
+
+    while True:
+        user_input = input("What would you like to do? (Type 'exit' or 'quit' to quit, 'memory' to see memory, 'export' to export the current knowledge graph) ")
+        if user_input.lower() == 'exit' or user_input.lower() == 'quit':
+            break
+        
+        if user_input.lower() == 'memory':
+            print("Memory of the story so far (previous user inputs and corresponding story updates):")
+            for entry in session_memory:
+                print(f"User Input: {entry['user_input']}")
+                print(f"Story Update: {entry['story_update']}")
+                print(f"KG Changes: {entry['kg_changes']}")
+                print("-----")
+            continue
+
+        if user_input.lower() == 'export':
+            export_file = input("Enter the filename to export the knowledge graph to (e.g., 'updated_knowledge_graph.json'): ")
+
+            if export_file.strip() == "":
+                export_file = "updated_knowledge_graph.json"
+
+            print(f"Exporting knowledge graph to {export_file}...")
+            with mgraph.export() as export:
+                data = export.to__mgraph_json()
+                with open(export_file, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+            continue
+
+        guardian_response = guardian_agent.run_sync(user_input).output # type: ignore
+        if "CANNOT UPDATE" in guardian_response:
+            print("Sorry, I cannot process that input. Please try something else.")
+            continue
+
+        story_update = generate_story_update(user_input, list(session_memory))
+        kg_changes = update_story_and_kg(user_input, story_update, list(session_memory))
+
+        memory_entry = {
+            "user_input": user_input,
+            "story_update": story_update,
+            "kg_changes": kg_changes
+        }
+        session_memory.append(memory_entry)
+
+        print(f"*****RESPONSE******\n{story_update}")
 
 
 if __name__ == "__main__":
