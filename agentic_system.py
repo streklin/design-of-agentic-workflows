@@ -95,58 +95,7 @@ model = AnthropicModel(
 )
 
 
-# KG Construction Agents
-character_extraction_agent = Agent(
-    model,
-    output_type=list[PlotEntity],
-    system_prompt=f"""
-    You are an expert in identifying characters in a story.
-    You will be given a story.
-    Your task is to:
-    * identify all primary characters in the story.
-    * generate a description of the character from story.
-    """
-)
 
-location_extraction_agent = Agent(
-    model,
-    output_type=list[PlotEntity],
-    system_prompt=f"""
-    You are an expert in identifying locations in a story.
-    You will be given a story.
-    Your task is to:
-    * identify all primary locations in the story.
-    * generate a description of the location based on the story.
-    """
-)
-
-map_creation_agent = Agent(
-    model,
-    output_type=list[GraphTriplet],
-    system_prompt=f"""
-    You are an expert at mapping out the connections between locations from a story.
-    You will be given a story.
-    You will be given a list of locations from that story.
-    Your task is to:
-    * Construct a collection of triplets where each triplet represents a connection between two locations in the story.
-    * Assign the "connects_to" label as the predicate for each triplet.
-    """
-)
-
-# Character / Object Relation Agent
-character_relationship_agent = Agent(
-    model,
-    output_type=list[GraphTriplet],
-    system_prompt=f"""
-    You are an expert in mapping out the relationships between characters in a story.
-    You are also an expert in mapping out the relationships between characters and objects in a story.
-    You will be given a story.
-    You will be given a list of characters and objects from that story.
-    You will be given a list of locations from that story.
-    Your task is to:
-    * construct a collection of subject, predicate, object triplets representing the important relationships in the story.
-    """
-)
 
 
 # Fiction Simulation Agents
@@ -154,5 +103,103 @@ character_relationship_agent = Agent(
 # Character Agent
 # World Agent
 
+class WorldGenerationSystem:
+
+    def _load_plotfile(self, plot_file="plot.md"):
+        """
+        loads the plot file from which the initial KG will be constructed.
+
+        Args:
+            filename: filename for the plot file.
+        Returns:
+            contents of the plot file.
+        """
+        with open(plot_file, 'r', encoding='utf-8') as file:
+            content = file.read()
+            return content
+
+    def __init__(self):
+    
+        self.character_extraction_agent = Agent(
+            model,
+            output_type=list[PlotEntity],
+            system_prompt=f"""
+            You are an expert in identifying characters in a story.
+            You will be given a story.
+            Your task is to:
+            * identify all primary characters in the story.
+            * generate a description of the character from story.
+            """
+        )
+
+        self.location_extraction_agent = Agent(
+            model,
+            output_type=list[PlotEntity],
+            system_prompt=f"""
+            You are an expert in identifying locations in a story.
+            You will be given a story.
+            Your task is to:
+            * identify all primary locations in the story.
+            * generate a description of the location based on the story.
+            """
+        )
+
+        self.map_creation_agent = Agent(
+            model,
+            output_type=list[GraphTriplet],
+            system_prompt=f"""
+            You are an expert at mapping out the connections between locations from a story.
+            You will be given a story.
+            You will be given a list of locations from that story.
+            Your task is to:
+            * Construct a collection of triplets where each triplet represents a connection between two locations in the story.
+            * Assign the "connects_to" label as the predicate for each triplet.
+            """
+        )
+
+        self.character_relationship_agent = Agent(
+            model,
+            output_type=list[GraphTriplet],
+            system_prompt=f"""
+            You are an expert in mapping out the relationships between characters in a story.
+            You are also an expert in mapping out the relationships between characters and objects in a story.
+            You will be given a story.
+            You will be given a list of characters and objects from that story.
+            You will be given a list of locations from that story.
+            Your task is to:
+            * construct a collection of subject, predicate, object triplets representing the important relationships in the story.
+            """
+        )
 
 
+    def process_plot(self, plot_file="plot.md", mgraph=None):
+        """
+        Processes a plot into a KG.
+
+        Args:
+            plot_file: location of the plot file to process.
+            mgraph: reference to the mgraph instance we are using to build the initial KG.
+        """
+        
+        plot = self._load_plotfile(plot_file=plot_file)
+
+        # extract characters
+        character_entities = self.character_extraction_agent.run_sync(f"""
+            You will extract the characters from the attached story:
+                                                                      
+            Story:
+            {plot}
+        """)
+
+        # extract locations
+        location_entities = self.location_extraction_agent.run_sync(f"""
+            You will extract the locations from the attached story:
+                                                                    
+            Story:
+            {plot}
+        """)
+
+        # extract the map triplets
+        location_triplets = self.map_creation_agent.run_sync(f"""
+                                                             
+        """)
