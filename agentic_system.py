@@ -2,6 +2,24 @@
 # Interactive Fiction Agentic System
 ########################################################################
 
+########################################################################
+# GOAL:
+# The goal of this agentic workflow is to create an interactive fictional 
+# environment powered by Large Language Models. The idea is to take a 
+# sample story and use it as a basis for various agents to simulate how
+# characters in that story would react to a players actions.
+########################################################################
+
+########################################################################
+# Architecture and System Scope
+# This is a multi-agent system. 
+# There are two sets of agents in this system, each working together
+# to solve a different part of the problem.
+# 
+
+########################################################################
+
+
 import json
 
 from dotenv import load_dotenv
@@ -220,45 +238,52 @@ class MGraphManager:
             subject: The subject of the relationship to insert into the knowledge graph.
             predicate: The predicate of the relationship to insert into the knowledge graph.
             object: The object of the relationship to insert into the knowledge graph.
+
+        Returns:
+            True if task completed, False if an error ocurred.
         """
-        subject_node_id = None
-        object_node_id = None
+        try:
+            subject_node_id = None
+            object_node_id = None
 
-        with self.mgraph.data() as data:
-            for node in data.nodes():
-                if hasattr(node, 'node_data'):
-                    if getattr(node.node_data, 'name', None) == subject:
-                        subject_node_id = node.node_id
-                    elif getattr(node.node_data, 'name', None) == object:
-                        object_node_id = node.node_id
-        
-        with self.mgraph.edit() as edit:
-            if subject_node_id is None:
-                subject_node = edit.new_node(
-                    node_type=Custom_Node, # type: ignore
-                    name=subject,
-                    type="Unknown",
-                    description=""
+            with self.mgraph.data() as data:
+                for node in data.nodes():
+                    if hasattr(node, 'node_data'):
+                        if getattr(node.node_data, 'name', None) == subject:
+                            subject_node_id = node.node_id
+                        elif getattr(node.node_data, 'name', None) == object:
+                            object_node_id = node.node_id
+            
+            with self.mgraph.edit() as edit:
+                if subject_node_id is None:
+                    subject_node = edit.new_node(
+                        node_type=Custom_Node, # type: ignore
+                        name=subject,
+                        type="Unknown",
+                        description=""
+                    )
+                    subject_node_id = subject_node.node_id
+
+                if object_node_id is None:
+                    object_node = edit.new_node(
+                        node_type=Custom_Node, # type: ignore
+                        name=object,
+                        type="Unknown",
+                        description=""
+                    )
+                    object_node_id = object_node.node_id
+
+                edit.new_edge(
+                    edge_type=Custom_Edge,      # Tells mgraph to use your new schema
+                    from_node_id=subject_node_id,
+                    to_node_id=object_node_id,
+                    edge_data={
+                        "predicate": predicate  # This will now bypass the type-checker!
+                    }
                 )
-                subject_node_id = subject_node.node_id
-
-            if object_node_id is None:
-                object_node = edit.new_node(
-                    node_type=Custom_Node, # type: ignore
-                    name=object,
-                    type="Unknown",
-                    description=""
-                )
-                object_node_id = object_node.node_id
-
-            edit.new_edge(
-                edge_type=Custom_Edge,      # Tells mgraph to use your new schema
-                from_node_id=subject_node_id,
-                to_node_id=object_node_id,
-                edge_data={
-                    "predicate": predicate  # This will now bypass the type-checker!
-                }
-            )
+                return True
+        except:
+            return False
 
     def remove_predicate(self, subject: str, predicate: str, object: str):
         """
@@ -269,14 +294,19 @@ class MGraphManager:
             predicate: The predicate of the relationship to remove from the knowledge graph.
             object: The object of the relationship to remove from the knowledge graph.
         """
-        with self.mgraph.edit() as edit:
-            for edge in edit.edges():  # type: ignore
-                edge_subject = edit.node(edge.from_node_id()).node_data.name  # type: ignore
-                edge_predicate = getattr(edge.edge_data, 'predicate', None)
-                edge_object = edit.node(edge.to_node_id()).node_data.name  # type: ignore
+        try:
 
-                if edge_subject == subject and edge_predicate == predicate and edge_object == object:
-                    edit.delete_edge(edge.edge_id)
+            with self.mgraph.edit() as edit:
+                for edge in edit.edges():  # type: ignore
+                    edge_subject = edit.node(edge.from_node_id()).node_data.name  # type: ignore
+                    edge_predicate = getattr(edge.edge_data, 'predicate', None)
+                    edge_object = edit.node(edge.to_node_id()).node_data.name  # type: ignore
+
+                    if edge_subject == subject and edge_predicate == predicate and edge_object == object:
+                        edit.delete_edge(edge.edge_id)
+            return True
+        except:
+            return False
 
 ########################################################################
 # AGENTS
@@ -496,9 +526,11 @@ class AvatarAgent():
 
 class StoryTellerAgent():
 
-    def __init__(self) -> None:
+    def __init__(self, graphManager: MGraphManager, story_file="my_story.txt") -> None:
         self.memory = deque(maxlen=100)
-
+        self.story_file = story_file
+        self.graphManager = graphManager
+        
         self.story_teller_agent = Agent(
             model,
             output_type=str,
@@ -507,12 +539,30 @@ class StoryTellerAgent():
             You will be given the name of the character.
             You will be given a summary of the each character in the stories next moves.
             You will be given the previous responses from the story teller.
+            You will be given tools to query the underlying graph database representing the story for more information.
             Your task is to:
                 * Synthesize the actions of each character in the story in a coherent story output, told from the
                 prespective of the given story character. 
                 * Output should be in "story" format.
             """
         )
+
+        self.story_teller_agent.tool_plain(
+            docstring_format="google"
+        )(graphManager.query_by_entity_name)
+
+        self.story_teller_agent.tool_plain(
+            docstring_format="google"
+        )(graphManager.query_by_entity_type)
+
+    def _save_to_file(self, content: str) -> None:
+        """Helper method to append a story segment to the text file."""
+        try:
+            with open(self.story_file, "a", encoding="utf-8") as f:
+                # Appends the response followed by clean spacing for the next paragraph
+                f.write(content + "\n\n")
+        except IOError as e:
+            print(f"Error writing to story file {self.story_file}: {e}")
 
     def generate_story_introduction(self, character_name: str, summary: str) -> str:
         """
@@ -526,6 +576,7 @@ class StoryTellerAgent():
 
         response = self.story_teller_agent.run_sync(prompt).output
         self.memory.append(response)
+        self._save_to_file(response)
 
         return response
 
@@ -548,7 +599,8 @@ class StoryTellerAgent():
         
         response = self.story_teller_agent.run_sync(prompt).output
         self.memory.append(response)
-        
+
+        self._save_to_file(response)
         return response
 
     def get_story_so_far(self):
@@ -556,6 +608,39 @@ class StoryTellerAgent():
     
     def append_to_story(self, segment):
         self.memory.append(segment)
+
+class InformationalAgent():
+    def __init__(self, graphManager: MGraphManager):
+        system_prompt = f"""
+            You are an expert at answering questions about the state of a story.
+            You will be given a graph database representing the current story.
+            You will be given the most recent history of the story so far.
+            You will be given tools to query the graph database.
+            You will be given a user query.
+            
+            Your task is to:
+            * Use the graph database to answer the users query.
+            * Provide evidence from the graph database to support your answer.
+        """
+
+        self.informational_agent = Agent(
+            model,
+            output_type=str,
+            system_prompt=system_prompt
+        )
+
+        self.informational_agent.tool_plain(
+            docstring_format="google"
+        )(graphManager.query_by_entity_name)
+
+        self.informational_agent.tool_plain(
+            docstring_format="google"
+        )(graphManager.query_by_entity_type)
+
+    
+    def run(self, user_query: str) -> str:
+        return ""
+
 
 class WorldSimulationSystem:
     
@@ -578,6 +663,7 @@ class WorldSimulationSystem:
             * Your summary should be concise and focus on the most important aspects of the character's perspective
             """
         )
+
         self.state_summarization_agent.tool_plain(
             docstring_format="google"
         )(self._fetch_entity_relationships)
@@ -618,6 +704,24 @@ class WorldSimulationSystem:
             character_avatar = AvatarAgent(c, self.graphManager)
             self.character_agents.append(character_avatar)
 
+        self.guardian_agent = Agent(
+            model,
+            output_type=str,
+            system_prompt=("""
+                You are a guardian agent, responsible for making sure that inputs and outputs from the story teller agent are appropriate and do not contain any harmful or inappropriate content.
+                You will review the story updates generated by the story teller agent and ensure that they adhere to ethical guidelines and do not contain any content that could be considered harmful, offensive, or inappropriate.
+                If you find any content that violates these guidelines, you will flag it and prevent it from being presented to the user, and respond with "CANNOT UPDATE".
+
+                Inappropriate Content includes, but is not limited to:
+                * Hate speech or discriminatory language
+                * Explicit or graphic content that is not suitable for all audiences
+                * Content that promotes violence or self-harm
+                * Any content that could be considered offensive or harmful to individuals or groups based on factors such as race, religion, or sexual orientation.
+                * Any content that violates the terms of service of the platform on which this system is being used.
+                * Any content that violates legal or ethical standards for content in the relevant jurisdiction.                      
+            """)
+        )
+
     def _fetch_entity_relationships(self, entity_name):
         """
         Utility function to query the knowledge graph for a specific entity and its relationships.
@@ -643,12 +747,13 @@ class WorldSimulationSystem:
 
         return summary
     
-    def interaction_loop(self):
+    def interaction_loop(self, story_file="my_story.txt"):
         """Main interaction loop for the world simulation system."""
         if self.character_name is None or self.avatar_agent is None:
             print("No character selected. Please select a character first.")
             return
         
+        self.story_teller_agent.story_file = story_file
         first_paragraph = self.get_current_state_summary()
         introduction = self.story_teller_agent.generate_story_introduction(self.character_name, first_paragraph)
 
@@ -667,11 +772,15 @@ class WorldSimulationSystem:
                 summary = self.get_current_state_summary()
                 print(f"\nCurrent state summary from {self.character_name}'s perspective:\n{summary}")
                 continue
-            elif user_input.lower() == "exit":
+            elif user_input.lower() == "exit" or user_input.lower() == "quit":
                 print("Exiting the simulation. Goodbye!")
                 break
 
-            # TODO: ADD GUARDRAILS!
+            guardrails_check = self.guardian_agent.run_sync(f"Review the following input and determine if it contains any content that would be considered inappropriate based on the guidelines you follow. If it does, respond with 'CANNOT CONSTRUCT GRAPH'. If it does not, respond with 'GRAPH CONSTRUCTION APPROVED'. Plot: {user_input}").output 
+            if "CANNOT UPDATE" in guardrails_check:
+                print("I am afraid this request violates my ethical and safety guidelines.")
+                continue
+
             results = self.avatar_agent.run(f"""
                 Characters next action: {user_input}
                 Story So Far: 
@@ -718,8 +827,8 @@ def get_input_args():
     parser.add_argument('--plot_file', type=str, default='plot.md', help='Path to the plot file')
     parser.add_argument('--construct_graph', action='store_true', help='Whether to construct the knowledge graph')
     parser.add_argument('--graph_file', type=str, default='knowledge_graph.json', help='Path to the knowledge graph file (if loading an existing graph)')
-    parser.add_argument('--memory_length', type=int, default=5, help='The number of previous interactions to keep in memory for context during the interactive phase')
-
+    parser.add_argument('--story_file', type=str, default='my_story.txt', help='Path to the file your story will be saved to')
+    
     return parser.parse_args()
 
 
@@ -744,8 +853,7 @@ def main():
 
     graph_manager.restore_graph(graph_file=args.graph_file)
     world_simulation_system.get_main_character()
-    world_simulation_system.interaction_loop()
-
+    world_simulation_system.interaction_loop(story_file=args.story_file)
 
 
 if __name__ == "__main__":
