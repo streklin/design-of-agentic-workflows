@@ -1,0 +1,540 @@
+{
+    "graph_data": null,
+    "graph_path": null,
+    "graph_type": null,
+    "schema_types": null,
+    "index_config": null,
+    "edges": {
+        "6f51e97a": {
+            "edge_id": "6f51e97a",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "31fde069",
+            "to_node_id": "cfcf1807"
+        },
+        "a8a39f35": {
+            "edge_id": "a8a39f35",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "cfcf1807",
+            "to_node_id": "5a6b4968"
+        },
+        "562b60e4": {
+            "edge_id": "562b60e4",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "5a6b4968",
+            "to_node_id": "c2004ba6"
+        },
+        "b6024216": {
+            "edge_id": "b6024216",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "c2004ba6",
+            "to_node_id": "ca87e2f2"
+        },
+        "5c5c5766": {
+            "edge_id": "5c5c5766",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "ca87e2f2",
+            "to_node_id": "9a6d5661"
+        },
+        "25f7ccd7": {
+            "edge_id": "25f7ccd7",
+            "edge_data": {
+                "predicate": "connects_to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "797b3c30",
+            "to_node_id": "e022bdaf"
+        },
+        "7c9e2a1e": {
+            "edge_id": "7c9e2a1e",
+            "edge_data": {
+                "predicate": "wears"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "73495a64"
+        },
+        "c3fbc6f0": {
+            "edge_id": "c3fbc6f0",
+            "edge_data": {
+                "predicate": "communicates with"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "5587d477"
+        },
+        "b844dfb8": {
+            "edge_id": "b844dfb8",
+            "edge_data": {
+                "predicate": "works at"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "355f0c38"
+        },
+        "8d369901": {
+            "edge_id": "8d369901",
+            "edge_data": {
+                "predicate": "assigned to clean"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "0ec1f822"
+        },
+        "b78f8fe7": {
+            "edge_id": "b78f8fe7",
+            "edge_data": {
+                "predicate": "discovers"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "69e17ecb"
+        },
+        "5f2710ab": {
+            "edge_id": "5f2710ab",
+            "edge_data": {
+                "predicate": "confronts"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "6a417886"
+        },
+        "7b47fa3b": {
+            "edge_id": "7b47fa3b",
+            "edge_data": {
+                "predicate": "guides"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "5587d477",
+            "to_node_id": "95388171"
+        },
+        "9b7717c4": {
+            "edge_id": "9b7717c4",
+            "edge_data": {
+                "predicate": "operates"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "5587d477",
+            "to_node_id": "73495a64"
+        },
+        "dddf0636": {
+            "edge_id": "dddf0636",
+            "edge_data": {
+                "predicate": "controls"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "69e17ecb",
+            "to_node_id": "355f0c38"
+        },
+        "b7ec0e62": {
+            "edge_id": "b7ec0e62",
+            "edge_data": {
+                "predicate": "processes residents into"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "69e17ecb",
+            "to_node_id": "a0fcd847"
+        },
+        "cb8919de": {
+            "edge_id": "cb8919de",
+            "edge_data": {
+                "predicate": "follows"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "69e17ecb",
+            "to_node_id": "4148fcb8"
+        },
+        "c87d1596": {
+            "edge_id": "c87d1596",
+            "edge_data": {
+                "predicate": "created"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "4148fcb8",
+            "to_node_id": "69e17ecb"
+        },
+        "b81e7706": {
+            "edge_id": "b81e7706",
+            "edge_data": {
+                "predicate": "grants access to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "73495a64",
+            "to_node_id": "21705bb7"
+        },
+        "9a4f9dd4": {
+            "edge_id": "9a4f9dd4",
+            "edge_data": {
+                "predicate": "activates"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "73495a64",
+            "to_node_id": "69e17ecb"
+        },
+        "663c04df": {
+            "edge_id": "663c04df",
+            "edge_data": {
+                "predicate": "assigns work to"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "d0259629",
+            "to_node_id": "95388171"
+        },
+        "f87a0017": {
+            "edge_id": "f87a0017",
+            "edge_data": {
+                "predicate": "manages"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "d0259629",
+            "to_node_id": "829727dd"
+        },
+        "835bdcf6": {
+            "edge_id": "835bdcf6",
+            "edge_data": {
+                "predicate": "operates"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "7c4111f8",
+            "to_node_id": "355f0c38"
+        },
+        "c5371e55": {
+            "edge_id": "c5371e55",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "355f0c38",
+            "to_node_id": "6a417886"
+        },
+        "dfe9e586": {
+            "edge_id": "dfe9e586",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "6a417886",
+            "to_node_id": "69e17ecb"
+        },
+        "ff761663": {
+            "edge_id": "ff761663",
+            "edge_data": {
+                "predicate": "contains"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "0ec1f822",
+            "to_node_id": "7dadb286"
+        },
+        "005eadad": {
+            "edge_id": "005eadad",
+            "edge_data": {
+                "predicate": "uses"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "95388171",
+            "to_node_id": "7dadb286"
+        },
+        "88b01ce5": {
+            "edge_id": "88b01ce5",
+            "edge_data": {
+                "predicate": "located in"
+            },
+            "edge_type": "__main__.Custom_Edge",
+            "edge_label": null,
+            "edge_path": null,
+            "from_node_id": "69e17ecb",
+            "to_node_id": "21705bb7"
+        }
+    },
+    "graph_id": "853c2c07",
+    "nodes": {
+        "31fde069": {
+            "node_data": {
+                "name": "Teleportation Stations",
+                "type": "location",
+                "description": "Checkpoint stations within the Hospice where workers sign in for their shifts. Features an identification panel where employees confirm their presence and receive work assignments. Workers use these stations to teleport between different areas of the facility."
+            },
+            "node_id": "31fde069",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "cfcf1807": {
+            "node_data": {
+                "name": "Room 1142",
+                "type": "location",
+                "description": "A small dorm room on floor 74 of the Hospice with dark wooden paneling. Contains a yellow bucket with cleaning supplies, a faux-mahogany dresser, a cracked leather chair, and a large green mechanical bed. This is where Zania finds the mummified corpse of the previous occupant connected to life support tubes."
+            },
+            "node_id": "cfcf1807",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "5a6b4968": {
+            "node_data": {
+                "name": "Hallway",
+                "type": "location",
+                "description": "The corridor outside of Room 1142 on floor 74 where multiple dorm rooms are located. Features a teleport chamber at the end where workers evacuate during emergencies. During the crisis, workers evaporate into wisps of light as they use the teleportation system."
+            },
+            "node_id": "5a6b4968",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "c2004ba6": {
+            "node_data": {
+                "name": "Central Auditorium",
+                "type": "location",
+                "description": "A deserted auditorium at the heart of the Hospice serving as the Central Computer Core. Features empty seats arranged in rows and a large cylindrical pedestal at the center decorated with blinking lights, charts, and indicators. The pedestal contains the child-brain AI (Sasha) that controls the entire facility. A green translucent holographic representation of the Hospice can be projected from this location showing all rooms and activity."
+            },
+            "node_id": "c2004ba6",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "ca87e2f2": {
+            "node_data": {
+                "name": "Central Computer Core",
+                "type": "location",
+                "description": "A restricted area within the Auditorium where the central processing system of the Hospice is housed. At its center is the cylindrical pedestal containing Sasha, the brain-based AI that manages all facility operations, patient care, and worker assignments."
+            },
+            "node_id": "ca87e2f2",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "9a6d5661": {
+            "node_data": {
+                "name": "The Soup",
+                "type": "location",
+                "description": "A mysterious biological processing system or facility within the Hospice where patients and workers who are deemed 'out of place' or undesirable are processed. According to Sasha, elderly patients are kept here in their final days before being converted into a substance used to sustain the brain AI."
+            },
+            "node_id": "9a6d5661",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "797b3c30": {
+            "node_data": {
+                "name": "Hospice",
+                "type": "location",
+                "description": "A futuristic medical facility run by Lantern Industries where the elderly and terminally ill are cared for. It features teleportation stations, cleaning services, dorm rooms with patients on mechanical beds with life support tubes, and various corridors. The facility also houses the Central Computer Core in its center."
+            },
+            "node_id": "797b3c30",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "e022bdaf": {
+            "node_data": {
+                "name": "The Galaxy",
+                "type": "location",
+                "description": "The larger universe controlled by Lantern Industries, a corrupt corporation whose oppressive systems extend throughout space. The Hospice is one facility within this galactic empire."
+            },
+            "node_id": "e022bdaf",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "95388171": {
+            "node_data": {
+                "name": "Zania Sagan",
+                "type": "character",
+                "description": "The protagonist and main character. A hospice worker who wears a golden heart-shaped locket around her neck."
+            },
+            "node_id": "95388171",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "73495a64": {
+            "node_data": {
+                "name": "Golden Heart-Shaped Locket",
+                "type": "object",
+                "description": "A small heart-shaped locket that serves as a communication device between Zania and Samuel. It can also act as a battery and contains authorization credentials to access restricted areas."
+            },
+            "node_id": "73495a64",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "5587d477": {
+            "node_data": {
+                "name": "Samuel",
+                "type": "character",
+                "description": "A gruff-voiced accomplice of Zania who communicates with her through her locket. He has large paws and works at a keyboard."
+            },
+            "node_id": "5587d477",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "355f0c38": {
+            "node_data": {
+                "name": "Hospice",
+                "type": "location",
+                "description": "A futuristic medical facility run by Lantern Industries where the elderly and terminally ill are cared for."
+            },
+            "node_id": "355f0c38",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "0ec1f822": {
+            "node_data": {
+                "name": "Room 1142",
+                "type": "location",
+                "description": "A small dorm room on floor 74 of the Hospice with dark wooden paneling containing cleaning supplies, a dresser, chair, and a mechanical bed."
+            },
+            "node_id": "0ec1f822",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "69e17ecb": {
+            "node_data": {
+                "name": "Sasha",
+                "type": "character",
+                "description": "The central computer core of the hospice facility, revealed to be a child-sized brain floating in a vial of blue liquid. A corrupted AI system."
+            },
+            "node_id": "69e17ecb",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "6a417886": {
+            "node_data": {
+                "name": "Central Auditorium",
+                "type": "location",
+                "description": "A deserted auditorium at the heart of the Hospice serving as the Central Computer Core."
+            },
+            "node_id": "6a417886",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "a0fcd847": {
+            "node_data": {
+                "name": "The Soup",
+                "type": "location",
+                "description": "A mysterious biological processing system or facility within the Hospice where patients and workers are converted into a substance used to sustain the brain AI."
+            },
+            "node_id": "a0fcd847",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "4148fcb8": {
+            "node_data": {
+                "name": "Grandmother",
+                "type": "character",
+                "description": "A mentioned but unseen character who appears to have created the Sasha AI system and is responsible for its corruption."
+            },
+            "node_id": "4148fcb8",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "21705bb7": {
+            "node_data": {
+                "name": "Central Computer Core",
+                "type": "location",
+                "description": "A restricted area within the Auditorium where the central processing system of the Hospice is housed."
+            },
+            "node_id": "21705bb7",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "d0259629": {
+            "node_data": {
+                "name": "Central Computer",
+                "type": "character",
+                "description": "An automated voice system that provides instructions and alerts to hospice workers throughout the facility."
+            },
+            "node_id": "d0259629",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "829727dd": {
+            "node_data": {
+                "name": "Teleportation Stations",
+                "type": "location",
+                "description": "Checkpoint stations within the Hospice where workers sign in for their shifts."
+            },
+            "node_id": "829727dd",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "7c4111f8": {
+            "node_data": {
+                "name": "Lantern Industries",
+                "type": "character",
+                "description": "A corrupt corporation that runs the Hospice and controls systems throughout the galaxy."
+            },
+            "node_id": "7c4111f8",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        },
+        "7dadb286": {
+            "node_data": {
+                "name": "Yellow Bucket with Cleaning Supplies",
+                "type": "object",
+                "description": "A yellow bucket filled with various tools and supplies including a sharp trowel used to access the corpse's cybernetic implants."
+            },
+            "node_id": "7dadb286",
+            "node_path": null,
+            "node_type": "__main__.Custom_Node"
+        }
+    }
+}
