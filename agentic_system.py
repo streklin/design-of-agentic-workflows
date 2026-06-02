@@ -181,6 +181,12 @@ Inserting triplet Zania Sagan->removes->her clothing
 #   malicious prompt to get around the GuardRail and fool the underlying
 #   agentic system to respond with content that violates ethical and 
 #   safety guidelines.
+#
+#   We are also currently limited by context size - espcially in phase 1.
+#   The system can only break down stories whcih fit within its overall
+#   context - we do not provide a way to handle larger inputs. As such
+#   extremly large stories (like novels) would be difficult to use as
+#   input for this system. (Not to mention very expensive).
 ########################################################################
 
 ########################################################################
@@ -663,7 +669,8 @@ class MGraphManager:
                     }
                 )
                 return True
-        except:
+        except Exception as e:
+            print(f"Error: {e}")
             return False
 
     def remove_predicate(self, subject: str, predicate: str, object: str):
@@ -689,7 +696,8 @@ class MGraphManager:
                     if edge_subject == subject and edge_predicate == predicate and edge_object == object:
                         edit.delete_edge(edge.edge_id)
             return True
-        except:
+        except Exception as e:
+            print(f"Error: {e}")
             return False
 
 ########################################################################
