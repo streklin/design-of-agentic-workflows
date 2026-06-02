@@ -16,7 +16,44 @@
 # There are two sets of agents in this system, each working together
 # to solve a different part of the problem.
 # 
-
+# Part 1: Populates a Graph DB based on a story file.
+#
+# Agents: 
+#   Character Extraction Agent: Extracts all key characters from the plot file.
+#
+#   Location Extraction Agent: Extracts all key locations from the plot file.
+#
+#   Map Creation Agent: Uses the Locations and the Story to generate triplets
+#   that represent an abstract representation of how locations are connected in 
+#   the story. These triplets are then used to populate the graphdb.
+#
+#   Character Relationship Agent: Uses the list of Characters and the plot file
+#   to generate triplets that represents how characters and objects in the story
+#   are associated with each other. These triplets are then used to populate
+#   the graphdb.
+#
+# Part 2: Use RAG to answer questions about the story and model the
+# relationships / locations.
+#
+# Agents:
+#   State Summerization Agent: This agent summerizes the current state of the
+#   story based on the contents of the knowledge graph.
+# 
+#   Story Teller Agent: This Agent specializes in taking in all the actions
+#   of the avatar agents and compiling them into a coherent update to the story.
+# 
+#   Avatar Agent: Agents of this type specialize in acting on behalf of a
+#   a character from the story. They generate actions and update the knowledge
+#   graph on behalf of the character.
+# 
+#   Informational Agent: This agent specializes in answering direct queries about
+#   characters or relationships in knowledge graph.
+# 
+#   Routing Agent: This agent specializes in determining if a users input is a
+#   question about the story, or an attempt to add to the story.
+#
+#   Guardian Agent: This agent checks the users input to ensure that meets
+#   ethical and safety standards.
 ########################################################################
 
 
@@ -128,6 +165,8 @@ class MGraphManager:
         
         # We build the KG from unique Entity names, so we need to keep track of which entities we've already added to the graph to avoid duplicates.
         # We can use a dictionary to map entity names to their corresponding node IDs in the graph, which will allow us to easily reference existing nodes when adding relationships.
+        
+        print(f"Inserting {len(relationships)} triplets into graph...")
         entities = {}
 
         with self.mgraph.edit() as edit:
@@ -189,6 +228,7 @@ class MGraphManager:
         Returns:
             A summary of all entities of the specified type and their relationships in the knowledge graph.
         """
+        print(f"Querying graph for entities of type: {entity_type}")
         results = []
 
         with self.mgraph.data() as data:
@@ -208,6 +248,8 @@ class MGraphManager:
         Returns:
             A summary of the specified entity and its relationships in the knowledge graph.
         """
+        print(f"Querying graph for entities of name: {entity_name}")
+
         results = []
 
         target_node_id = None
@@ -242,6 +284,9 @@ class MGraphManager:
         Returns:
             True if task completed, False if an error ocurred.
         """
+
+        print(f"Inserting triplet {subject}->{predicate}->{object}")
+
         try:
             subject_node_id = None
             object_node_id = None
@@ -294,6 +339,9 @@ class MGraphManager:
             predicate: The predicate of the relationship to remove from the knowledge graph.
             object: The object of the relationship to remove from the knowledge graph.
         """
+        print(f"Removing triplet {subject}->{predicate}->{object}")
+
+
         try:
 
             with self.mgraph.edit() as edit:
@@ -515,7 +563,7 @@ class AvatarAgent():
         Here is the recent conversational history:
         {self.memory}
         """
-        result = self.agent.run_sync(user_input).output
+        result = self.agent.run_sync(prompt).output
 
         self.memory.append({
             "user_input": user_input,
@@ -639,8 +687,35 @@ class InformationalAgent():
 
     
     def run(self, user_query: str) -> str:
-        return ""
+        """
+        runs a query on the informational agent
+        """
+        return self.informational_agent.run_sync(user_query).output
 
+
+class RoutingAgent():
+
+    def __init__(self):
+        self.agent = Agent(
+            model,
+            output_type=str,
+            system_prompt="""
+                You are an expert in differentiating between questions about a story and a users attempt to add to or move the story forward.
+                Your task is to:
+                * Analyze if the user is asking for information about the story or game world.
+                * Return "QUERY" if the user making a query, "STORY" otherwise.
+            """
+        )
+
+    def run(self, user_input:str) -> bool:
+        """
+        Executes the RoutingAgent query
+
+        Args:
+            user_input: the users query
+        """
+        classification = self.agent.run_sync(user_input).output
+        return "QUERY" in classification
 
 class WorldSimulationSystem:
     
@@ -668,7 +743,9 @@ class WorldSimulationSystem:
             docstring_format="google"
         )(self._fetch_entity_relationships)
 
-        self.story_teller_agent = StoryTellerAgent()
+        self.story_teller_agent = StoryTellerAgent(self.graphManager)
+        self.information_agent = InformationalAgent(self.graphManager)
+        self.routing_agent = RoutingAgent()
 
 
     def _get_all_characters(self):
@@ -746,7 +823,54 @@ class WorldSimulationSystem:
         self.story_teller_agent.append_to_story(summary)
 
         return summary
-    
+
+    def _run_story_agent(self, user_input: str):
+        """
+        Runs the story agent on the user input
+
+        Args:
+            user_input: the users prompt.
+        """
+        
+        results = self.avatar_agent.run(f"""
+                Characters next action: {user_input}
+                Story So Far: 
+                {self.story_teller_agent.get_story_so_far()}
+            """)
+          
+        character_updates = {}
+        for avatar in self.character_agents:
+            cu = avatar.run(f"""
+                    The main characters most recent actions can be summarized as:
+                                
+                    {results}
+
+                    Please update on how your character would respond to this. If you're character would not be aware of these actions,
+                    then please do nothing and respond with NO CHANGES
+
+                    Here is the story so far:
+
+                    {self.story_teller_agent.get_story_so_far()}
+
+            """)
+
+            print(f"Updating {avatar.character_name}...")
+            character_updates[avatar.character_name] = cu
+            
+        next_update = self.story_teller_agent.generate_next_story_item(self.character_name, results, character_updates)
+        print(f"\n{self.character_name} did the following: \n{results}")
+        print(next_update)
+
+    def _run_informational_agent(self, user_input:str):
+        """
+        Runs the informational agent.
+
+        Args:
+            user_input: the users prompt
+        """
+        response = self.information_agent.run(user_input)
+        print(f"Information: \n {response}")
+
     def interaction_loop(self, story_file="my_story.txt"):
         """Main interaction loop for the world simulation system."""
         if self.character_name is None or self.avatar_agent is None:
@@ -780,36 +904,13 @@ class WorldSimulationSystem:
             if "CANNOT UPDATE" in guardrails_check:
                 print("I am afraid this request violates my ethical and safety guidelines.")
                 continue
-
-            results = self.avatar_agent.run(f"""
-                Characters next action: {user_input}
-                Story So Far: 
-                {self.story_teller_agent.get_story_so_far()}
-            """)
-          
-            character_updates = {}
-            for avatar in self.character_agents:
-                cu = avatar.run(f"""
-                    The main characters most recent actions can be summarized as:
-                                
-                    {results}
-
-                    Please update on how your character would respond to this. If you're character would not be aware of these actions,
-                    then please do nothing and respond with NO CHANGES
-
-                    Here is the story so far:
-
-                    {self.story_teller_agent.get_story_so_far()}
-
-                """)
-
-                print(f"Updating {avatar.character_name}...")
-
-                character_updates[avatar.character_name] = cu
             
-            next_update = self.story_teller_agent.generate_next_story_item(self.character_name, results, character_updates)
-            print(f"\n{self.character_name} did the following: \n{results}")
-            print(next_update)
+            is_query = self.routing_agent.run(user_input)
+
+            if is_query:
+                self._run_informational_agent(user_input)
+            else:
+                self._run_story_agent(user_input)
 
 
 ########################################################################
