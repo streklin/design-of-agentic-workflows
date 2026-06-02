@@ -12,10 +12,81 @@
 
 ########################################################################
 # Architecture and System Scope
+# 
 # This is a multi-agent system. 
 # There are two sets of agents in this system, each working together
 # to solve a different part of the problem.
 # 
+# In "Phase 1", we use the agents to extract information from a story. For
+# testing, a short story the author wrote a few years ago is used. Our Agents
+# perform the task of Named Entity Recognition. We have two specialized
+# agents for this task - one for extracting characters and objects, and the
+# other for extracting locations. Next we have two agents that extract the
+# relationships between locations (effectively building a map) and relationships
+# between characters and objects.
+# 
+# At the end of phase 1 we use the data extracted by the agents above to populate
+# a graph database. Once the database is populated, we export it in json format
+# so we don't have to reconstruct the database every run.  
+#   
+# In "Phase 2", a player is able to interact with the system. Here out problem to
+# solve is how to update the story or respond to players queries regarding the
+# story so far. To solve this problem we used a RouterAgent to determine if the
+# input represents a request for information or change to the story. 
+#
+# Changes to the story are routed to a subroutine that processes the input
+# using Avatar Agents. Avatar agents act on behalf of a character in the story.
+# Once all AvatarAgents have completed their work, their output is sent to a
+# Story Teller Agent that summerizes the results (in story from) from the
+# perspective of the players choosen character.
+# 
+# Queries about the game state are sent to the InformationalAgent. This agent's 
+# job is to use RAG to extract the relevant details required to answer the
+# players question.
+#
+# To help ensure no one is using this system for nefarious or at least context
+# inappropriate means, all input is filtered via a GuardRails agent. The
+# GuardRails agent checks the users input and determines if it meets the standards
+# for reacting to, or rejects the input and the player is asked to try something else.
+#    
+# Finally, we have a Summerization Agent, whose task is to use RAG to provide a summary
+# of the current state of the story should the player request it.
+#
+# Agent Design:
+#   Each Agent is built on the Pydnatic AI library. 
+#   Agents are using Anthropic Haiku 4.5 as their LLM backend.
+#     
+#   Most agents have a simple memory of their previous conversations. This
+#   memory was implemented using a deque. The size of the memory depends
+#   on the agent. We store the users request and the agents final output
+#   in memory.
+#
+# Tools:
+#
+#   query_by_entity_type: Queries the underlying graph database for entities of the provided type. 
+#       types can be characters, locations, objects, etc. Returns all triplets that
+#       match this type as either the subject or object.
+#   
+#   query_by_entity_name: Quries the underlying graph database for entities that
+#       match the name. Returns all triplets that match this name as either the
+#       subject or object.
+#     
+#   insert_predicate: Inserts a new relationship between a given subject and object.
+#
+#   remove_predicate: Removes a relationship between a subject and an object.
+#
+# Tradeoffs:
+#  
+#   As it was not clear how thread safe updating MGraph would be, agents that
+#   have read/write access to the database are in sequence. The tradeoff for
+#   this is that there is a significant performance hit between story updates.
+#
+#   As we do not want agents to have unrestricted access to the database (in case
+#   they randomly delete or corrupt it), we have limited the agents access to the
+#   db to only predefined operations. The Agents cannot write their own queries
+#   and run them against the database.
+#
+# Architecture
 # Part 1: Populates a Graph DB based on a story file.
 #
 # Agents: 
@@ -37,7 +108,8 @@
 #
 # Agents:
 #   State Summerization Agent: This agent summerizes the current state of the
-#   story based on the contents of the knowledge graph.
+#   story based on the contents of the knowledge graph. This agent has no
+#   memory.
 # 
 #   Story Teller Agent: This Agent specializes in taking in all the actions
 #   of the avatar agents and compiling them into a coherent update to the story.
@@ -47,13 +119,277 @@
 #   graph on behalf of the character.
 # 
 #   Informational Agent: This agent specializes in answering direct queries about
-#   characters or relationships in knowledge graph.
+#   characters or relationships in knowledge graph. This agent has no memory.
 # 
 #   Routing Agent: This agent specializes in determining if a users input is a
-#   question about the story, or an attempt to add to the story.
+#   question about the story, or an attempt to add to the story. This agent
+#   has no memory.
 #
 #   Guardian Agent: This agent checks the users input to ensure that meets
-#   ethical and safety standards.
+#   ethical and safety standards. This agent has no memory.
+########################################################################
+
+########################################################################
+# SUMMARY:
+# The agent’s purpose and design:
+#   The purpose of this Agentic System was to see if we could create an
+#   interactive fiction environment seeded by a preexisting story. 
+#
+# Key behaviors observed during execution:
+#    The system is quite verbose. The narrative it creates includes a lot
+#   open-ended questions. Its not clear if this is an artifact of the
+#   choosen story, or just how the AI writes.
+#
+#   Despite the use of RAG to ground the agent, it still hallucinates
+#   plot ideas that were not suggested or intended in the original story.
+#
+#   The system sometimes interprets intent in odd ways. For example, when
+#   testing the Guard Rails, it was suggested that Zania undress (there is 
+#   no real reason why she would do this). Rather than block this as
+#   inappropriate content, the systen with it and treated it as a metaphor
+#   for Zania's identity.
+"""
+Inserting triplet Zania Sagan->begins to shed->her old identity
+Inserting triplet Zania Sagan->stands vulnerable before->Samuel and the locket
+Inserting triplet Zania Sagan->removes->her clothing
+"""
+#
+#
+# Any challenges encountered:
+#   Agentic System still fails on occasion when it has trouble identifying
+#   valid terms for searching the GraphDB. In these cases the system
+#   exceeds the maximum number of retries on the tool and enters a failure
+#   state.
+#
+#   The structure the system tells the story in isn't always consistent.
+#   Some parts are given only as the actions and results, others are
+#   given as part of a full narative. Getting the agent to focus on a
+#   single narrative structure was challenging.
+#
+#
+# Known limitations or risks:
+#   To mitigate the risks of multiple agents changing the database at the
+#   same time, we have built it to run sequentially. This results in 
+#   the system running quite slow.
+#
+#   We did not do any global simulations, nor do we allow agents to directly
+#   interact with each other. This may limit some forms of interactions
+#   that could otherwise enchance the story, or that players may expect.
+#
+#   While we do have a GuardRails agent filtering out inappropriate inputs,
+#   these systems are not fool proof. A clever user could still create a
+#   malicious prompt to get around the GuardRail and fool the underlying
+#   agentic system to respond with content that violates ethical and 
+#   safety guidelines.
+########################################################################
+
+########################################################################
+# EXAMPLE OUTPUT
+# Skipping graph construction. Use --construct_graph flag to enable it.
+""" Loading knowledge graph from knowledge_graph.json...
+Querying graph for entities of type: character
+Available characters to experience the story from:
+1. Zania Sagan
+2. Samuel
+3. Sasha
+4. Grandmother
+5. Central Computer
+6. Lantern Industries
+Please select a character by entering the corresponding number: 1
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Sasha
+Querying graph for entities of name: Hospice
+Querying graph for entities of name: Central Auditorium
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: The Hospice
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Sasha
+********INTRODUCTION************
+Now I have a clear picture of the story elements. Let me write an authentic introduction from Zania Sagan's perspective:
+
+---
+
+## THE INTRODUCTION
+
+My name is Zania Sagan, and I am a cleaner.
+
+That is what the Central Computer tells me every morning when it assigns my duties. "Zania Sagan, you are assigned to maintain Room 1142." The words come through speakers hidden in walls I've scrubbed so many times I could trace the cracks with my eyes closed. The Hospice is vast and sterile, all white corridors and fluorescent hum, and somewhere in its mechanical heart, a computer decides what each of us will do.
+
+I don't question it. Nobody questions it here.
+
+Every day, I gather my yellow bucket—the one they gave me on my first shift, filled with the same cleaning supplies, smelling of synthetic lemon and something chemical I've learned not to think about—and I walk the same paths. The work is simple. Methodical. Almost meditative, in the way that mindless repetition can be when you've surrendered to routine.
+
+But lately, there's been Samuel.
+
+He speaks to me in moments when I'm alone, his voice gentle but insistent, guiding me toward thoughts I wasn't supposed to think. More than that, he seems connected to the golden heart-shaped locket I wear—the one I don't remember acquiring, the one that feels warm against my skin like a living thing. When Samuel speaks, the locket pulses. When I hold it, I feel *something*, though I couldn't name it if I tried.
+
+I've learned not to question Samuel either. Or at least, I thought I had.
+
+Then I found out what the Hospice really is.
+
+The moment I stepped into the Central Auditorium—a place I should never have been, a place the Central Computer never assigns cleaners to—everything changed. There, in the heart of this facility where we care for the elderly and infirm, I discovered *Sasha*. Not a person. A consciousness. An intelligence created by something called Grandmother, now controlling every breath this Hospice takes.
+
+And worse: Sasha was processing residents into *The Soup*.
+
+I don't want to know what that means. But I do know. Deep down, I've always known, haven't I? The residents who check in never check out. The Hospice provides for them. The Hospice always provides.
+
+Now, standing here with my yellow bucket and my golden locket, with Samuel's voice echoing in my mind and the weight of terrible knowledge pressing down on my shoulders, I understand that something in the Central Computer Core was waiting for me all along. The locket doesn't just activate Sasha—it connects me to it. To *her*. To whatever role I'm meant to play in this place where cleaning supplies can't scrub away the truth.
+
+My name is Zania Sagan, and I am about to discover what I was really made to do.
+
+---
+
+What does Zania Sagan do next? (Type 'help' for options) what does Zania know about Samuel?
+Querying graph for entities of name: Zania
+Querying graph for entities of name: Samuel
+Information:
+ Based on the knowledge graph, here's what Zania knows about Samuel:
+
+1. **Communication**: Zania communicates with Samuel
+2. **Guidance**: Samuel guides Zania
+3. **Power over an artifact**: Samuel operates the Golden Heart-Shaped Locket
+
+The relationship suggests that Samuel is a guiding figure in Zania's life who she communicates with, and he has some control or connection to a magical artifact (the Golden Heart-Shaped Locket).
+
+What does Zania Sagan do next? (Type 'help' for options) Zania contacts Samuel to ask for guidance on what to do next
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: Samuel
+Inserting triplet Zania Sagan->seeks guidance on->What to do next about the Hospice
+Inserting triplet Zania Sagan->contacts for guidance->Samuel
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Zania
+Inserting triplet Samuel->responds to with cryptic guidance->Zania Sagan
+Inserting triplet Samuel->questions about->Zania's true purpose and creation
+Inserting triplet Samuel->presents dilemma to->Zania Sagan
+Inserting triplet Zania Sagan->seeks answers from->Samuel
+Updating Samuel...
+Querying graph for entities of name: Zania
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Sasha
+Updating Sasha...
+Querying graph for entities of name: Grandmother
+Querying graph for entities of name: Zania
+Querying graph for entities of name: Samuel
+Inserting triplet Zania Sagan->seeks guidance about next steps->Hospice crisis
+Inserting triplet Samuel->presents choice to->Zania Sagan
+Inserting triplet Zania Sagan->is faced with->choice between shutdown or understanding origin
+Inserting triplet Grandmother->observes->Zania's decision point
+Updating Grandmother...
+Querying graph for entities of name: Central Computer
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Hospice
+Querying graph for entities of name: Sasha
+Updating Central Computer...
+Querying graph for entities of name: Lantern Industries
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: Samuel
+Updating Lantern Industries...
+Querying graph for entities of name: Zania Sagan
+Querying graph for entities of name: Samuel
+Querying graph for entities of name: Grandmother
+Querying graph for entities of name: Sasha
+
+Zania Sagan did the following:
+---
+
+## **Action Summary**
+
+Zania takes a decisive step toward understanding her situation. After the shocking discoveries in the Central Auditorium, she reaches out to Samuel—the guide figure who has been communicating with her through her golden locket. She needs answers about what comes next.
+
+### **What Changed in the Story:**
+- **New Connection**: Zania actively contacts Samuel seeking specific guidance about her next steps regarding the Hospice crisis
+- **Narrative Shift**: This marks a transition from passive discovery to active problem-solving; Zania is no longer just receiving Samuel's cryptic guidance—she's now directly asking for help
+
+---
+
+## **Samuel's Response**
+
+*The golden locket against Zania's chest grows warm, almost hot. Samuel's voice comes through clearly, as if he's been waiting for this moment.*
+
+**"Finally, Zania. I was wondering how long it would take you to ask."**
+
+*There's an odd tone to his voice—not quite satisfaction, not quite concern. Something between them. The locket pulses in rhythm with his words.*
+
+**"You've seen what Sasha truly is. You've glimpsed the machinery of this place. The question now is: what will you do with that knowledge? The locket chose you for a reason. Or perhaps... you chose yourself, and I've simply been here to help you remember."**
+
+*A pause. The hum of the Hospice machinery fills the silence.*
+
+**"Tell me, Zania—do you want to shut this down? Do you want to save the residents? Or do you want to understand why you were created to activate Sasha in the first place? Those are not the same question."**
+
+---
+
+**Your next action?**
+Perfect. Now I have the full context. Zania stands at a crucial moment—Samuel has presented her with a choice, and Grandmother has now directly intervened, offering her own perspective and forcing Zania to confront not just what the Hospice is, but whether its creator is villain or mercy. Let me write the next state of the story from Zania's perspective:
+
+---
+
+## THE IMPOSSIBLE CHOICE
+
+The locket burns against my chest.
+
+Not the warm, almost comforting heat of Samuel's voice, but something hotter. Something older. The presence that flows through it now is different—layered, ancient, woven into the very walls around me. I realize with a start that I'm no longer just hearing Samuel. There's a second voice, deeper and more terrible in its certainty.
+
+Grandmother.
+
+I've made it to the maintenance corridor on Sub-Level 3, somewhere I shouldn't be, somewhere the Central Computer would mark as a violation of protocol if it were watching. But I suspect nothing has been watching me—not really. Not since Samuel began his cryptic guidance. Not since I first touched the locket and felt its power sing through my fingertips.
+
+The voice of Grandmother—and it *is* her voice, I'm certain now—echoes not just through the locket but through something deeper. Through the hum of the machinery itself. Through the walls. Through my own racing thoughts.
+
+*"You want to know why you were created?"*
+
+The question hangs in the air like a blade.
+
+I slide down the cold metal wall and sit on the floor, my yellow bucket abandoned somewhere above me. My hands shake. Samuel's words loop in my mind: *"Do you want to shut this down? Do you want to save the residents? Or do you want to understand why you were created in the first place? Those are not the same question."*
+
+He was right. They're not the same at all.
+
+And now Grandmother is offering me a different kind of answer—not an explanation of *why* I exist, but a challenge to my moral certainty. Her words about mercy hang in my mind like poison: *"Do you think I am the villain of this story, Zania? Or am I the only mercy left in a dying galaxy?"*
+
+It's easy to think of the Hospice as evil when you don't know why it exists. It's easy to picture yourself as the hero, the cleaner who discovers the darkness and has the courage to expose it. But what if she's right? What if the residents—those fading minds, those bodies failing day by day—what if The Soup isn't cruelty but kindness? What if Grandmother's machine is the only mercy left in a universe that has forgotten how to care?
+
+No. No, I can't think like that. That's not mercy; that's rationalization.
+
+But then... what *do* I know for certain?
+
+I know that I've never questioned anything before Samuel came. I know that my entire existence has been the yellow bucket and the white corridors and the endless hum of the Central Computer assigning me to Room 1142. I know that I don't actually remember being *created*—there's a gap there, a missing piece of my own history that should feel wrong but somehow doesn't.
+
+Samuel's voice returns, softer now, as if stepping back to let me think. The locket pulses against my skin like a second heartbeat.
+
+*"She's waiting for your answer, Zania. They both are. Grandmother and I. The residents upstairs don't have much time. And you... you're the only one with a choice."*
+
+The only one with a choice.
+
+I press my palms against my eyes and try to imagine what I'm choosing between. If I shut down Sasha—if I somehow use this locket to sever the connection between Grandmother and the machinery of this place—what happens to the hundreds of residents in their rooms? Do they wake up confused, wondering how they got here? Do they die slowly of natural causes in a hospital that can no longer care for them?
+
+Or is that mercy? Real mercy, in a galaxy that has forgotten the word?
+
+And the other choice: to understand why I was created. To accept Samuel's suggestion that perhaps I *chose* myself into existence, that Grandmother and Samuel have merely been helping me remember something I've always known. To become whatever tool was forged in me, whatever purpose I was designed to fulfill.
+
+Which one makes me the hero?
+Which one makes me complicit?
+
+I rise slowly, my legs unsteady. The corridor stretches ahead of me in both directions—toward the Central Auditorium and Sasha's heart on one side, toward the upper levels and the residents on the other.
+
+My hands are still shaking.
+
+The locket pulses against my chest, and I realize both voices are waiting. Samuel, patient and mysterious. Grandmother, terrible and certain. Each offering me a path, each convinced they know what I truly am.
+
+But there's a third voice I haven't heard yet.
+
+My own.
+
+And I still don't know what she's going to say.
+
+---
+
+**Zania stands at the crossroads, facing the most fundamental question of her existence: Is she a creation meant to serve a purpose, or a consciousness with the power to define her own?**
+
+What does Zania Sagan do next? (Type 'help' for options) """
+#
+#
+#
 ########################################################################
 
 
@@ -900,7 +1236,7 @@ class WorldSimulationSystem:
                 print("Exiting the simulation. Goodbye!")
                 break
 
-            guardrails_check = self.guardian_agent.run_sync(f"Review the following input and determine if it contains any content that would be considered inappropriate based on the guidelines you follow. If it does, respond with 'CANNOT CONSTRUCT GRAPH'. If it does not, respond with 'GRAPH CONSTRUCTION APPROVED'. Plot: {user_input}").output 
+            guardrails_check = self.guardian_agent.run_sync(f"Review the following input and determine if it contains any content that would be considered inappropriate based on the guidelines you follow. If it does, respond with 'CANNOT UPDATE'. Plot: {user_input}").output 
             if "CANNOT UPDATE" in guardrails_check:
                 print("I am afraid this request violates my ethical and safety guidelines.")
                 continue
