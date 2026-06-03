@@ -965,7 +965,7 @@ class StoryTellerAgent():
             Main Character: {character_name}
             Main Character Last Action: {summary}
         """
-
+        
         response = self.story_teller_agent.run_sync(prompt).output
         self.memory.append(response)
         self._save_to_file(response)
